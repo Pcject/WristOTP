@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">WristOTP</string>
+    <string name="import_backup">Import backup</string>
+    <string name="upload_backup_file">Upload backup file</string>
+    <string name="backup_file">Backup file</string>
+    <string name="upload">Upload</string>
+    <string name="waiting_for_upload">Waiting for upload</string>
+    <string name="importing">Importing</string>
+    <string name="backup_password">Backup password</string>
+    <string name="password_error">Password error</string>
+    <string name="import_success">Import successful</string>
+    <string name="import_success_skipped">Import successful; skipped %1$d</string>
+    <string name="import_failed">Import failed</string>
+    <string name="file_too_large">File is larger than 20 MB</string>
+    <string name="no_file_uploaded">No file uploaded</string>
+    <string name="missing_multipart_boundary">Missing multipart boundary</string>
+    <string name="bad_request">Bad request</string>
+    <string name="not_found">Not found</string>
+    <string name="http_service_failed">Network or port unavailable: %1$s</string>
+    <string name="unsupported_file_format">Unsupported file format</string>
+    <string name="no_authenticators">No authenticators</string>
+    <string name="hotp_not_supported">HOTP is not supported yet</string>
+    <string name="cancel">Cancel</string>
+    <string name="all">All</string>
+</resources>

@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">WristOTP</string>
+    <string name="import_backup">导入备份</string>
+    <string name="upload_backup_file">上传备份文件</string>
+    <string name="backup_file">备份文件</string>
+    <string name="upload">上传</string>
+    <string name="waiting_for_upload">等待上传</string>
+    <string name="importing">正在导入</string>
+    <string name="backup_password">备份密码</string>
+    <string name="password_error">密码错误</string>
+    <string name="import_success">导入成功</string>
+    <string name="import_success_skipped">导入成功；已跳过 %1$d 项</string>
+    <string name="import_failed">导入失败</string>
+    <string name="file_too_large">文件大于 20 MB</string>
+    <string name="no_file_uploaded">未上传文件</string>
+    <string name="missing_multipart_boundary">上传表单无效</string>
+    <string name="bad_request">请求无效</string>
+    <string name="not_found">页面不存在</string>
+    <string name="http_service_failed">网络或端口不可用：%1$s</string>
+    <string name="unsupported_file_format">文件格式不支持</string>
+    <string name="no_authenticators">没有身份验证器</string>
+    <string name="hotp_not_supported">HOTP 暂不支持</string>
+    <string name="cancel">取消</string>
+    <string name="all">全部</string>
+</resources>

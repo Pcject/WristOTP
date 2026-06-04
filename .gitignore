@@ -1,0 +1,31 @@
+# Gradle / Android build output
+.gradle/
+**/.gradle/
+.kotlin/
+**/.kotlin/
+build/
+*/build/
+app/release/
+
+# Local SDKs, toolchains, and machine-specific config
+.tools/
+local.properties
+*.iml
+.idea/
+
+# Signing material and release artifacts
+.release-signing/
+release-signing/
+*.jks
+*.keystore
+*.p12
+*.pem
+credentials.txt
+dist/
+*.apk
+*.aab
+*.idsig
+
+# OS / IDE noise
+.DS_Store
+captures/

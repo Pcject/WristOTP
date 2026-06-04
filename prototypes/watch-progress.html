@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WristOTP Progress Bar Prototype</title>
+  <style>
+    :root {
+      --bg: #08090a;
+      --screen: #000;
+      --row: #050505;
+      --text: #f7f8f8;
+      --muted: #9b9fa4;
+      --dim: #24272b;
+      --accent: #2cb1ec;
+      --warn: #f2a63b;
+      --danger: #ee5d50;
+      --ring: #171a1e;
+      --watch: 454px;
+      --progress: 13;
+      --period: 30;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 50% 16%, #17202a 0, transparent 260px),
+        linear-gradient(180deg, #050607 0%, #0c0d0e 100%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .stage {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: minmax(454px, 1fr) 320px;
+      gap: 36px;
+      align-items: center;
+    }
+
+    .watch-shell {
+      width: var(--watch);
+      height: var(--watch);
+      margin: 0 auto;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,0.06), transparent 54%),
+        #050607;
+      box-shadow:
+        0 0 0 12px #111418,
+        0 0 0 15px #252a30,
+        0 30px 80px rgba(0,0,0,0.55);
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--screen);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen::before,
+    .screen::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 46px;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .screen::before {
+      top: 0;
+      background: linear-gradient(#000 0%, rgba(0,0,0,0));
+    }
+
+    .screen::after {
+      bottom: 0;
+      background: linear-gradient(rgba(0,0,0,0), #000 100%);
+    }
+
+    .view {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .view.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .list-view {
+      overflow-y: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .list-view::-webkit-scrollbar {
+      display: none;
+    }
+
+    .list {
+      min-height: 100%;
+      padding: 48px 44px 44px;
+      display: grid;
+      align-content: start;
+      gap: 7px;
+    }
+
+    .row {
+      min-height: 96px;
+      background: var(--row);
+      padding: 8px 10px 8px;
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      column-gap: 10px;
+      align-items: start;
+      border-radius: 0;
+    }
+
+    .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--tone, var(--accent)) 18%, #151719);
+      color: var(--tone, var(--accent));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 23px;
+      line-height: 1;
+      margin-top: 5px;
+    }
+
+    .meta {
+      min-width: 0;
+      padding-top: 3px;
+    }
+
+    .issuer {
+      font-size: 22px;
+      line-height: 1.02;
+      letter-spacing: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .code-area {
+      grid-column: 2 / 3;
+      display: grid;
+      justify-items: end;
+      gap: 4px;
+      padding-top: 1px;
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 39px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .bar {
+      width: 100%;
+      height: 4px;
+      background: var(--dim);
+      overflow: hidden;
+      border-radius: 1px;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: calc(var(--progress) / var(--period) * 100%);
+      background: var(--accent);
+      transform-origin: left center;
+      transition: width 300ms linear, background 180ms ease;
+    }
+
+    .bar.warn > span {
+      background: var(--warn);
+    }
+
+    .seconds {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .seconds.warn {
+      color: var(--warn);
+    }
+
+    .detail {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 40px 44px;
+      text-align: center;
+    }
+
+    .detail-stack {
+      width: 100%;
+      display: grid;
+      justify-items: center;
+    }
+
+    .detail .icon {
+      width: 66px;
+      height: 66px;
+      font-size: 33px;
+      margin: 0 0 25px;
+    }
+
+    .detail .issuer {
+      width: 100%;
+      font-size: 29px;
+      line-height: 1.05;
+    }
+
+    .detail .user {
+      width: 100%;
+      font-size: 21px;
+      margin-top: 6px;
+    }
+
+    .detail-code {
+      margin-top: 25px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 66px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .detail .bar {
+      width: min(250px, 100%);
+      height: 5px;
+      margin-top: 23px;
+    }
+
+    .detail .seconds {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .panel {
+      background: #111418;
+      border: 1px solid #252a30;
+      padding: 18px;
+      border-radius: 8px;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.38);
+    }
+
+    .panel h1 {
+      font-size: 20px;
+      line-height: 1.2;
+      margin: 0 0 8px;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .panel p {
+      margin: 0 0 18px;
+      color: #a8adb3;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .control {
+      display: grid;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #c7ccd1;
+      font-weight: 700;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .seg.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    button {
+      min-height: 36px;
+      color: #e9eef3;
+      background: #1b2026;
+      border: 1px solid #303741;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.active {
+      color: #00141d;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .hint {
+      margin-top: 18px;
+      color: #767d85;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .mode-list .list-view,
+    .mode-detail .detail-view {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .bar-placement-bottom .row {
+      min-height: 91px;
+      position: relative;
+      padding-bottom: 13px;
+    }
+
+    .bar-placement-bottom .row .code-area {
+      gap: 2px;
+    }
+
+    .bar-placement-bottom .row .bar {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 6px;
+      width: auto;
+    }
+
+    .bar-placement-bottom .row .seconds {
+      display: none;
+    }
+
+    .bar-placement-compact .row {
+      grid-template-columns: 44px 1fr 76px;
+      min-height: 74px;
+      align-items: center;
+    }
+
+    .bar-placement-compact .row .code-area {
+      grid-column: 3 / 4;
+      grid-row: 1 / 2;
+      padding-top: 0;
+      align-self: center;
+    }
+
+    .bar-placement-compact .row .code {
+      display: none;
+    }
+
+    .bar-placement-compact .row .bar {
+      width: 76px;
+      height: 8px;
+    }
+
+    .bar-placement-compact .row .seconds {
+      margin-top: 1px;
+      font-size: 12px;
+    }
+
+    .show-seconds-no .seconds {
+      display: none;
+    }
+
+    .show-seconds-no .row {
+      min-height: 88px;
+    }
+
+    @media (max-width: 860px) {
+      body {
+        padding: 18px;
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        width: min(454px, 100%);
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="watch-shell" aria-label="Watch 5 round screen preview">
+      <div id="screen" class="screen mode-list bar-placement-bottom show-seconds-no">
+        <div class="view list-view">
+          <div class="list">
+            <article class="row">
+              <div class="icon" style="--tone:#2cb1ec">G</div>
+              <div class="meta">
+                <div class="issuer">GitHub</div>
+                <div class="user">alice@example.com</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>381378</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#7bd88f">G</div>
+              <div class="meta">
+                <div class="issuer">Google</div>
+                <div class="user">personal@gmail.com</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>046921</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#b7a6ff">M</div>
+              <div class="meta">
+                <div class="issuer">Microsoft</div>
+                <div class="user">work@contoso.com</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>740156</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#f2a63b">A</div>
+              <div class="meta">
+                <div class="issuer">AWS</div>
+                <div class="user">root-account</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>920443</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#5ed3f3">O</div>
+              <div class="meta">
+                <div class="issuer">OpenAI</div>
+                <div class="user">alice@example.com</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>613088</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#ee5d50">C</div>
+              <div class="meta">
+                <div class="issuer">Cloudflare</div>
+                <div class="user">ops@example.com</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>832540</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#75d6c1">B</div>
+              <div class="meta">
+                <div class="issuer">Bitwarden</div>
+                <div class="user">vault</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>155908</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+
+            <article class="row">
+              <div class="icon" style="--tone:#a8adb3">S</div>
+              <div class="meta">
+                <div class="issuer">Stripe</div>
+                <div class="user">billing</div>
+              </div>
+              <div class="code-area">
+                <div class="code" data-code>488209</div>
+                <div class="bar" data-list-bar>
+                  <span></span>
+                </div>
+                <div class="seconds" data-list-seconds>13s</div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="view detail-view">
+          <div class="detail">
+            <div class="detail-stack">
+              <div class="icon">W</div>
+              <div class="issuer">Example</div>
+              <div class="user">alice@example.com</div>
+              <div class="detail-code" data-code>381378</div>
+              <div id="detailBar" class="bar">
+                <span></span>
+              </div>
+              <div id="detailSeconds" class="seconds">13 seconds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h1>WristOTP 进度条样式稿</h1>
+      <p>按小米 Watch 5 接近的 454×454 圆屏看版。这里先忽略 HOTP，模拟导入很多 TOTP 后的列表密度。</p>
+
+      <div class="control">
+        <div class="label">屏幕状态</div>
+        <div class="seg two" data-group="mode">
+          <button class="active" data-value="list">列表</button>
+          <button data-value="detail">详情</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="label">列表进度条位置</div>
+        <div class="seg" data-group="placement">
+          <button data-value="code">验证码下</button>
+          <button class="active" data-value="bottom">条目底</button>
+          <button data-value="compact">短条</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="label">列表秒数</div>
+        <div class="seg" data-group="seconds">
+          <button data-value="yes">显示</button>
+          <button class="active" data-value="no">隐藏</button>
+          <button data-value="detail">仅详情</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="label">剩余时间：<span id="timeLabel">13</span>s</div>
+        <input id="timeRange" type="range" min="1" max="30" value="13">
+      </div>
+
+      <div class="hint">
+        手表里可以直接滚动左侧圆屏列表。推荐比较「验证码下 + 仅详情秒数」和「条目底 + 隐藏秒数」两种密度。
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const screen = document.querySelector("#screen");
+    const timeRange = document.querySelector("#timeRange");
+    const timeLabel = document.querySelector("#timeLabel");
+    const listBars = document.querySelectorAll("[data-list-bar]");
+    const detailBar = document.querySelector("#detailBar");
+    const listSeconds = document.querySelectorAll("[data-list-seconds]");
+    const detailSeconds = document.querySelector("#detailSeconds");
+
+    function activate(group, value) {
+      document.querySelectorAll(`[data-group="${group}"] button`).forEach((button) => {
+        button.classList.toggle("active", button.dataset.value === value);
+      });
+    }
+
+    function setMode(value) {
+      screen.classList.remove("mode-list", "mode-detail");
+      screen.classList.add(`mode-${value}`);
+      activate("mode", value);
+    }
+
+    function setPlacement(value) {
+      screen.classList.remove("bar-placement-code", "bar-placement-bottom", "bar-placement-compact");
+      screen.classList.add(`bar-placement-${value}`);
+      activate("placement", value);
+    }
+
+    function setSeconds(value) {
+      screen.classList.remove("show-seconds-yes", "show-seconds-no", "show-seconds-detail");
+      screen.classList.add(value === "detail" ? "show-seconds-no" : `show-seconds-${value}`);
+      detailSeconds.style.display = value === "no" ? "none" : "block";
+      activate("seconds", value);
+    }
+
+    function updateTime(value) {
+      const seconds = Number(value);
+      const warning = seconds <= 5;
+      document.documentElement.style.setProperty("--progress", seconds);
+      timeLabel.textContent = seconds;
+      listSeconds.forEach((node) => {
+        node.textContent = `${seconds}s`;
+        node.classList.toggle("warn", warning);
+      });
+      detailSeconds.textContent = `${seconds} seconds`;
+      listBars.forEach((node) => node.classList.toggle("warn", warning));
+      detailBar.classList.toggle("warn", warning);
+      detailSeconds.classList.toggle("warn", warning);
+    }
+
+    document.querySelectorAll("[data-group='mode'] button").forEach((button) => {
+      button.addEventListener("click", () => setMode(button.dataset.value));
+    });
+
+    document.querySelectorAll("[data-group='placement'] button").forEach((button) => {
+      button.addEventListener("click", () => setPlacement(button.dataset.value));
+    });
+
+    document.querySelectorAll("[data-group='seconds'] button").forEach((button) => {
+      button.addEventListener("click", () => setSeconds(button.dataset.value));
+    });
+
+    timeRange.addEventListener("input", (event) => updateTime(event.target.value));
+
+    const params = new URLSearchParams(window.location.search);
+    const mode = ["list", "detail"].includes(params.get("mode")) ? params.get("mode") : "list";
+    const placement = ["code", "bottom", "compact"].includes(params.get("placement")) ? params.get("placement") : "bottom";
+    const seconds = ["yes", "no", "detail"].includes(params.get("seconds")) ? params.get("seconds") : "no";
+    const time = Number(params.get("time"));
+    if (Number.isFinite(time)) {
+      timeRange.value = String(Math.max(1, Math.min(30, Math.round(time))));
+    }
+
+    setMode(mode);
+    setPlacement(placement);
+    setSeconds(seconds);
+    updateTime(timeRange.value);
+
+    const scroll = Number(params.get("scroll"));
+    if (Number.isFinite(scroll)) {
+      requestAnimationFrame(() => {
+        document.querySelector(".list-view").scrollTop = Math.max(0, scroll);
+      });
+    }
+  </script>
+</body>
+</html>
