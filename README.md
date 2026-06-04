@@ -95,4 +95,4 @@ core/  OTP generation, backup parsing, crypto, HTTP import, and storage
 
 ## License
 
-This project is released under the Unlicense. See [LICENSE](LICENSE).
+This project is released under the MIT License. See [LICENSE](LICENSE).
