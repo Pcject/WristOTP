@@ -1,8 +1,23 @@
 # WristOTP
 
+English | [简体中文](README.zh-CN.md)
+
 WristOTP is a standalone native Wear OS authenticator app for watches.
 
 It is designed for watches that may not have Google Mobile Services, Play Services, phone-node sync, external storage access, or a usable system file picker. Authenticators are stored locally on the watch, and backups are imported through a temporary HTTP upload page that can be opened from a phone browser on the same LAN.
+
+## Screenshots
+
+The screenshots below use generated demo authenticator data.
+
+<p>
+  <img src="docs/screenshots/wristotp-list.png" width="220" alt="WristOTP list screen">
+  <img src="docs/screenshots/wristotp-detail.png" width="220" alt="WristOTP detail screen">
+</p>
+<p>
+  <img src="docs/screenshots/wristotp-drawer.png" width="220" alt="WristOTP top drawer">
+  <img src="docs/screenshots/wristotp-import.png" width="220" alt="WristOTP import screen">
+</p>
 
 ## Features
 
